@@ -1,0 +1,10 @@
+prefix=/usr/local
+libdir=/usr/local/lib
+includedir=/usr/local/include/ns3-dev
+
+Name: libns3-tlb-probing
+Description: ns-3 module ns3-tlb-probing
+Version: 3-dev
+Libs: -L${libdir} -Wl,-Bdynamic -lns3-dev-tlb-probing-debug
+Cflags: -I${includedir}
+Requires: libns3-dev-core-debug libns3-dev-internet-debug libns3-dev-tlb-debug libns3-dev-xpath-routing-debug
