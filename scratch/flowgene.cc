@@ -147,15 +147,15 @@ int main (int argc, char *argv[])
     // Command line parameters parsing
     std::string id = "0";
     unsigned randomSeed = 0;
-    std::string cdfFileName = "examples/load-balance/VL2_CDF.txt";
+    std::string cdfFileName = "examples/load-balance/FB_CDF.txt";
     double load = 0.7;
     std::string transportProt = "Tcp";
 
     // The simulation starting and ending time
     double START_TIME = 0.0;
-    double END_TIME = 0.1;
+    double END_TIME = 0.01;
 
-    double FLOW_LAUNCH_END_TIME = 0.1;
+    double FLOW_LAUNCH_END_TIME = 0.01;
 
     uint32_t linkLatency = 10;
 
@@ -516,9 +516,9 @@ int main (int argc, char *argv[])
     
    std::cout<<flowCount<<std::endl;
 
-    for(std::size_t i=0;i<flows.size();i++){
+    //for(std::size_t i=0;i<flows.size();i++){
        // std::cout<<flows[i].src<<" "<<flows[i].dest<<" "<<flows[i].port<<" "<<flows[i].size<<" "<<flows[i].start<<std::endl;
-    }    
+    //}    
     std::cout<<"\n"<<std::endl;
     for(std::size_t i=0;i<flows.size()-1;i++){
         for(std::size_t j=0;j<flows.size()-1-i;j++){
@@ -527,7 +527,7 @@ int main (int argc, char *argv[])
             }
         }
     }
-    for(std::size_t i=0;i<flows.size();i++){
+    for(std::size_t i=0;i<10000;i++){
         out<<flows[i].src<<" "<<flows[i].dest<<" "<<flows[i].port<<" "<<flows[i].size<<" "<<flows[i].start<<std::endl;
         //std::cout<<flows[i].src<<" "<<flows[i].dest<<" "<<flows[i].port<<" "<<flows[i].size<<" "<<flows[i].start<<std::endl;
     }
