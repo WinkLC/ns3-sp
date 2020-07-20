@@ -195,11 +195,11 @@ T rand_range (T min, T max)
 {
     return min + ((double)max - min) * rand () / RAND_MAX;
 }
-/*
+
 void install_applications2(NodeContainer servers, double requestRate, struct cdf_table *cdfTable,long &flowCount, long &totalFlowSize, int SERVER_COUNT, int LEAF_COUNT, 
-                           double START_TIME, double END_TIME, double FLOW_LAUNCH_END_TIME, uint32_t applicationPauseThresh, uint32_t applicationPauseTime){
+                           double START_TIME, double END_TIME, std::string FlowTXT, uint32_t applicationPauseThresh, uint32_t applicationPauseTime){
     std::vector<Flow> flows;
-    std::ifstream in("flow.txt",std::ios::in);
+    std::ifstream in(FlowTXT,std::ios::in);
     if(!in.is_open()){
         std::cout<<"error"<<std::endl;
         exit(1);
@@ -214,9 +214,8 @@ void install_applications2(NodeContainer servers, double requestRate, struct cdf
     NS_LOG_INFO ("Install applications from file:");
     
     for(std::size_t i=0;i<flows.size()-1;i++){
+        flowCount++;
         std::cout<<flows[i].src<<" "<<flows[i].dest<<" "<<flows[i].port<<" "<<flows[i].size<<" "<<flows[i].start<<std::endl;
-        if(flows[i].start>END_TIME)
-            break;
         int fromServerIndex = flows[i].src;
         int destServerIndex = flows[i].dest;
         uint16_t port = flows[i].port;
@@ -248,7 +247,7 @@ void install_applications2(NodeContainer servers, double requestRate, struct cdf
         sinkApp.Stop (Seconds (END_TIME));
     }
 }
-*/
+
 void install_applications (int fromLeafId, NodeContainer servers, double requestRate, struct cdf_table *cdfTable,
         long &flowCount, long &totalFlowSize, int SERVER_COUNT, int LEAF_COUNT, double START_TIME, double END_TIME, double FLOW_LAUNCH_END_TIME, uint32_t applicationPauseThresh, uint32_t applicationPauseTime)
 {
@@ -304,44 +303,6 @@ void install_applications (int fromLeafId, NodeContainer servers, double request
     }
 }
 
-void recvPackets(std::string context,Ptr<const Packet> p,const Address &from){
-    Ptr<Packet> pktCopy = p->Copy();
-    PppHeader pppH;
-    Ipv4Header ipH;
-    TcpHeader tcpH;
-
-    pktCopy->RemoveHeader(pppH);
-    //std::cout<<pppH<<std::endl;
-    pktCopy->RemoveHeader(ipH);
-    //std::cout<<ipH<<std::endl;
-    pktCopy->PeekHeader(tcpH);
-    std::cout<<tcpH<<std::endl;
-    //uint16_t a = (uint16_t)tcpH.GetFlags();
-    //std::cout<<a<<std::endl;
-    //uint8_t flag = th.GetFlags();
-    
-//Ipv4FlowProbeTag tag;
-    //packet->FindFirstMatchingByteTag(tag);
-    //uint32_t fid = tag.GetFlowId ();
-    //fid = (fid+1)/2;
-    //uint32_t pid = tag.GetPacketId();
-    //uint32_t psize = tag.GetPacketSize();
-}
-
-void sendPackets(std::string path,Ptr<const Packet> packet){
-    Ptr<Packet> pktCopy = packet->Copy();
-    PppHeader pppH;
-    Ipv4Header ipH;
-    TcpHeader tcpH;
-
-    //pktCopy->RemoveHeader(pppH);
-    //std::cout<<pppH<<std::endl;
-    pktCopy->RemoveHeader(ipH);
-    std::cout<<ipH<<std::endl;
-    pktCopy->PeekHeader(tcpH);
-    std::cout<<tcpH<<std::endl;
-}
-
 uint32_t pktcounter = 0;
 uint32_t oldcounter = 0;
 
@@ -362,102 +323,11 @@ void Throughput()
   Simulator::Schedule(Seconds(period), &Throughput);
 }
 
-int step = -1;
-double period = 10.0;
-double throught[20]={0.0};
-
-void ThroughputMonitor (FlowMonitorHelper* fmhelper, Ptr<FlowMonitor> flowMon,std::string id)
-{
-    if(step>=0)
-    {
-        std::list<std::string> activelist;
-        std::list<std::string> finishedlist;
-        std::map<FlowId, FlowMonitor::FlowStats> flowStats = flowMon->GetFlowStats();
-        Ptr<Ipv4FlowClassifier> classing = DynamicCast<Ipv4FlowClassifier> (fmhelper->GetClassifier());
-        double th = 0.0;
-        for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator stats = flowStats.begin (); stats != flowStats.end (); ++stats)
-        {	
-            Ipv4FlowClassifier::FiveTuple fiveTuple = classing->FindFlow (stats->first);
-		/*
-		std::cout<<stats->first<<","<<fiveTuple.sourceAddress<<","<<fiveTuple.destinationAddress<<","<<fiveTuple.sourcePort<<","<<fiveTuple.destinationPort<<<<","<<fiveTuple.protocol<<endl;
-		std::cout<<"Flow ID			: " << stats->first <<" ; "<< fiveTuple.sourceAddress <<" -----> "<<fiveTuple.destinationAddress<<std::endl;
-		std::cout<<"Tx Packets = " << stats->second.txPackets<<std::endl;
-		std::cout<<"Rx Packets = " << stats->second.rxPackets<<std::endl;
-		std::cout<<"Duration		: "<<stats->second.timeLastRxPacket.GetSeconds()-stats->second.timeFirstTxPacket.GetSeconds()<<std::endl;
-		std::cout<<"Last Received Packet	: "<< stats->second.timeLastRxPacket.GetSeconds()<<" Seconds"<<std::endl;
-		std::cout<<"Throughput: " << stats->second.rxBytes * 8.0 / (stats->second.timeLastRxPacket.GetSeconds()-stats->second.timeFirstTxPacket.GetSeconds())/1024/1024  << " Mbps"<<std::endl;
-		std::cout<<"---------------------------------------------------------------------------"<<std::endl;
-		*/
-            if(!(stats->first % 2 == 0)){
-                std::ostringstream oss;
-                if(stats->second.rxPackets < stats->second.txPackets){
-                    oss << fiveTuple.sourceAddress<<","<<fiveTuple.destinationAddress<<","<<fiveTuple.sourcePort<<","<<fiveTuple.destinationPort<<","<<"tcp";
-                    if(activelist.size()<10){
-                         activelist.push_back(oss.str());
-                     }
-                     else{
-                         activelist.pop_front();
-                         activelist.push_back(oss.str());
-                     }
-                     oss.clear();
-                //std::cout<<stats->first<<","<<fiveTuple.sourceAddress<<","<<fiveTuple.destinationAddress<<","<<fiveTuple.sourcePort<<","<<fiveTuple.destinationPort<<","<<"tcp"<<std::endl;
-                 }
-                 else{
-                     th += stats->second.rxBytes/ (stats->second.timeLastRxPacket.GetSeconds()-stats->second.timeFirstTxPacket.GetSeconds());
-                     oss<< fiveTuple.sourceAddress<<","<<fiveTuple.destinationAddress<<","<<fiveTuple.sourcePort<<","<<fiveTuple.destinationPort<<",tcp,"<<
-                     stats->second.rxBytes<<","<<(stats->second.timeLastRxPacket.GetSeconds()-stats->second.timeFirstTxPacket.GetSeconds());
-                     if(finishedlist.size()<100){
-                         finishedlist.push_back(oss.str());
-                     }
-                     else{
-                         finishedlist.pop_front();
-                         finishedlist.push_back(oss.str());
-                     }
-                     oss.clear();
-                    // std::cout<<stats->first<<","<<fiveTuple.sourceAddress<<","<<fiveTuple.destinationAddress<<","<<fiveTuple.sourcePort<<","<<fiveTuple.destinationPort<<","<<"tcp,"<<
-                    // stats->second.rxBytes<<","<<(stats->second.timeLastRxPacket.GetSeconds()-stats->second.timeFirstTxPacket.GetSeconds())<<std::endl;
-                }
-            }
-        }
-        throught[step] = th;
-        std::cout<<th<<std::endl;
-        while(activelist.size()<10){
-            activelist.push_back("0,0,0,0,0");          
-        }
-        while(finishedlist.size()<100){
-             finishedlist.push_back("0,0,0,0,0,0,0");
-        }
-        activelist.splice (activelist.end(), finishedlist);
-        std::list<std::string>::iterator itor;
-        itor = activelist.begin();
-        std::stringstream stateFilename;
-        stateFilename<<"state-"<<id<<"-"<<step<<".txt";
-
-        std::ofstream out (stateFilename.str ().c_str (), std::ios::out|std::ios::app);
-        while(itor!=activelist.end())
-        {
-            //std::cout<< *itor++<<std::endl;
-            out <<*itor++<<std::endl;
-        }
-        out.close(); 
-        if(step > 0){
-            std::stringstream rewardFilename;
-            rewardFilename<<"reward-"<<id<<"-"<<step-1<<".txt";
-            std::ofstream out (rewardFilename.str ().c_str (), std::ios::out|std::ios::app);
-            double reward = throught[step]/throught[step-1];
-            out<<reward<<std::endl;
-            out.close();
-        }
-    }
-    step++;
-    Simulator::Schedule(Seconds(period),&ThroughputMonitor, fmhelper, flowMon, id);
-}
 
 int main (int argc, char *argv[])
 {
 #if 1
     //LogComponentEnable ("Ipv4GlobalRouting", LOG_LEVEL_INFO);
-    //LogComponentEnable ("FlowMonitor", LOG_LEVEL_WARN);
     LogComponentEnable ("CongaSimulationLarge", LOG_LEVEL_INFO);
 #endif
 
@@ -465,13 +335,14 @@ int main (int argc, char *argv[])
     std::string id = "0";
     std::string runModeStr = "Conga";
     unsigned randomSeed = 0;
-    std::string cdfFileName = "examples/load-balance/VL2_CDF.txt";   //""
+    std::string cdfFileName = "VL2_CDF.txt";   //""
+    std::string FlowTXT = "vl2flow.txt";   //""
     double load = 0.7;   //0.0
     std::string transportProt = "Tcp";
 
     // The simulation starting and ending time
     double START_TIME = 0.0;
-    double END_TIME = 1;
+    double END_TIME = 50;
 
     double FLOW_LAUNCH_END_TIME = 1;
 
@@ -554,6 +425,7 @@ int main (int argc, char *argv[])
     cmd.AddValue ("StartTime", "Start time of the simulation", START_TIME);
     cmd.AddValue ("EndTime", "End time of the simulation", END_TIME);
     cmd.AddValue ("FlowLaunchEndTime", "End time of the flow launch period", FLOW_LAUNCH_END_TIME);
+    cmd.AddValue ("FlowTXT", "flow documention", FlowTXT);
     cmd.AddValue ("runMode", "Running mode of this simulation: Conga, Conga-flow, Presto, Weighted-Presto, DRB, FlowBender, ECMP, Clove, DRILL, LetFlow", runModeStr);
     cmd.AddValue ("randomSeed", "Random seed, 0 for random generated", randomSeed);
     cmd.AddValue ("cdfFileName", "File name for flow distribution", cdfFileName);
@@ -1453,13 +1325,13 @@ int main (int argc, char *argv[])
 
     long flowCount = 0;
     long totalFlowSize = 0;
-
+/*
     for (int fromLeafId = 0; fromLeafId < LEAF_COUNT; fromLeafId ++)
     {
         install_applications(fromLeafId, servers, requestRate, cdfTable, flowCount, totalFlowSize, SERVER_COUNT, LEAF_COUNT, START_TIME, END_TIME, FLOW_LAUNCH_END_TIME, applicationPauseThresh, applicationPauseTime);
     }
-
-    //install_applications2(servers, requestRate, cdfTable, flowCount, totalFlowSize, SERVER_COUNT, LEAF_COUNT, START_TIME, END_TIME, FLOW_LAUNCH_END_TIME, applicationPauseThresh, applicationPauseTime);
+*/
+    install_applications2(servers, requestRate, cdfTable, flowCount, totalFlowSize, SERVER_COUNT, LEAF_COUNT, START_TIME, END_TIME, FlowTXT, applicationPauseThresh, applicationPauseTime);
     NS_LOG_INFO ("Total flow: " << flowCount);
 
     NS_LOG_INFO ("Actual average flow size: " << static_cast<double> (totalFlowSize) / flowCount);

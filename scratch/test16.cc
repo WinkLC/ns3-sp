@@ -478,7 +478,6 @@ int main (int argc, char *argv[])
     Recv_sock->Bind(addr);
     Recv_sock->SetRecvCallback(MakeCallback(&CSRecvString)); 
 
-
     //server send to cs
     InetSocketAddress RecvAddr = InetSocketAddress(csi.GetAddress(0), 9);
     std::vector<Ptr<Socket>> Send_sock (SERVER_COUNT * LEAF_COUNT);

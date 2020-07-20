@@ -15,13 +15,7 @@ K.set_session(sess)
 actor = ActorNetwork(sess)
 
 t0 = time.clock()
-s_t = np.random.randint(10,size=3840)
+s_t = np.random.randint(100,size=500)
 a_t = actor.model.predict(s_t.reshape(1, s_t.shape[0]))[0]
 t1 = time.clock()
 print((t1-t0))
-'''
-filename = '1.txt'
-with open(filename, 'w') as file_object:
-    for i in a_t:
-        file_object.write(str(i)+" ")
-'''
